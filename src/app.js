@@ -14,5 +14,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/categories', require('./routes/category.routes'));
 app.use('/api/transactions', require('./routes/transaction.routes'));
+app.use('/api/debts', require('./routes/debt.routes'));
+app.use('/api/financings', require('./routes/financing.routes'));
 
 module.exports = app;

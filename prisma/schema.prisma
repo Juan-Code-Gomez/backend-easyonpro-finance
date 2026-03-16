@@ -21,6 +21,8 @@ model User {
   updatedAt         DateTime      @updatedAt
   categories        Category[]
   transactions      Transaction[]
+  debts             Debt[]
+  financings        Financing[]
 }
 
 model Category {
@@ -51,6 +53,66 @@ model Transaction {
   updatedAt   DateTime        @updatedAt
 }
 
+// Deudas propias (lo que YO debo)
+model Debt {
+  id           String     @id @default(uuid())
+  creditor     String     // A quién le debo
+  description  String?
+  totalAmount  Float      // Monto total de la deuda
+  paidAmount   Float      @default(0) // Lo que ya he pagado
+  monthlyPayment Float?   // Cuota mensual
+  dueDate      DateTime?  // Fecha límite
+  status       DebtStatus @default(ACTIVE)
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments     DebtPayment[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model DebtPayment {
+  id        String   @id @default(uuid())
+  amount    Float
+  date      DateTime @default(now())
+  note      String?
+  debtId    String
+  debt      Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+// Financiamientos que YO hago a otros (celulares, oro, dinero)
+model Financing {
+  id              String            @id @default(uuid())
+  clientName      String            // Nombre del cliente
+  clientPhone     String?
+  itemDescription String            // Qué se financió
+  itemType        String            @default("Otro") // Celular, Oro, Dinero, etc.
+  capital         Float             // Monto prestado/financiado
+  interestRate    Float             // Tasa de interés mensual (%)
+  installments    Int               // Número de cuotas
+  installmentAmount Float           // Valor de cada cuota (calculado)
+  totalAmount     Float             // Total a recibir (capital + intereses)
+  totalInterest   Float             // Ganancia total en intereses
+  startDate       DateTime          @default(now())
+  status          FinancingStatus   @default(ACTIVE)
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments        FinancingPayment[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model FinancingPayment {
+  id           String    @id @default(uuid())
+  installmentNo Int      // Número de cuota (1, 2, 3...)
+  amount       Float
+  date         DateTime  @default(now())
+  note         String?
+  financingId  String
+  financing    Financing @relation(fields: [financingId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+}
+
 enum TransactionType {
   INCOME
   EXPENSE
@@ -59,4 +121,16 @@ enum TransactionType {
 enum CategoryType {
   INCOME
   EXPENSE
+}
+
+enum DebtStatus {
+  ACTIVE
+  PAID
+  OVERDUE
+}
+
+enum FinancingStatus {
+  ACTIVE
+  PAID
+  OVERDUE
 }
