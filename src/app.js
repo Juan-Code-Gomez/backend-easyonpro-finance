@@ -16,5 +16,8 @@ app.use('/api/categories', require('./routes/category.routes'));
 app.use('/api/transactions', require('./routes/transaction.routes'));
 app.use('/api/debts', require('./routes/debt.routes'));
 app.use('/api/financings', require('./routes/financing.routes'));
+app.use('/api/savings', require('./routes/savings.routes'));
+app.use('/api/alerts', require('./routes/alert.routes'));
+app.use('/api/reports', require('./routes/report.routes'));
 
 module.exports = app;

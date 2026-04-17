@@ -23,6 +23,9 @@ model User {
   transactions      Transaction[]
   debts             Debt[]
   financings        Financing[]
+  savingsGoals      SavingsGoal[]
+  alerts            Alert[]
+  budgets           Budget[]
 }
 
 model Category {
@@ -34,6 +37,7 @@ model Category {
   userId       String
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+  budgets      Budget[]
   createdAt    DateTime      @default(now())
 
   @@unique([name, userId, type])
@@ -133,4 +137,75 @@ enum FinancingStatus {
   ACTIVE
   PAID
   OVERDUE
+}
+
+// Metas de ahorro
+model SavingsGoal {
+  id            String           @id @default(uuid())
+  name          String
+  icon          String           @default("🎯")
+  targetAmount  Float
+  savedAmount   Float            @default(0)
+  targetDate    DateTime?
+  status        SavingsStatus    @default(ACTIVE)
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deposits      SavingsDeposit[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model SavingsDeposit {
+  id            String      @id @default(uuid())
+  amount        Float
+  note          String?
+  date          DateTime    @default(now())
+  goalId        String
+  goal          SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+}
+
+enum SavingsStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+// Alertas y notificaciones del sistema
+model Alert {
+  id        String    @id @default(uuid())
+  type      AlertType
+  title     String
+  message   String
+  read      Boolean   @default(false)
+  relatedId String?   // ID del objeto relacionado (deuda, financiamiento, meta)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+}
+
+// Presupuestos mensuales por categoría
+model Budget {
+  id         String   @id @default(uuid())
+  amount     Float    // Límite mensual
+  month      Int      // 1-12
+  year       Int
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([categoryId, userId, month, year])
+}
+
+enum AlertType {
+  BUDGET_EXCEEDED    // Presupuesto superado
+  BUDGET_WARNING     // Cerca del límite (80%)
+  DEBT_OVERDUE       // Deuda vencida
+  DEBT_DUE_SOON      // Deuda próxima a vencer
+  FINANCING_OVERDUE  // Financiamiento atrasado
+  SAVINGS_MILESTONE  // Meta de ahorro alcanzada
+  GENERAL            // Recordatorio manual
 }
